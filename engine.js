@@ -1,6 +1,6 @@
 // ISI DENGAN DATA SUPABASE MILIKMU
-const SUPABASE_URL = "MASUKKAN_URL_SUPABASE_KAMU"; 
-const SUPABASE_KEY = "MASUKKAN_ANON_KEY_KAMU";
+const SUPABASE_URL = "https://cjtjmhkoplxaaquuplec.supabase.co"; 
+const SUPABASE_KEY = "sb_publishable_asFmGMLi0HeVsj0jdY34SA_H-uKESEQ";
 
 async function handleBuy(productName, productPrice) {
     let savedBuyer = localStorage.getItem("qhuf_buyer_name");
