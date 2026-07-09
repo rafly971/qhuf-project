@@ -57,19 +57,26 @@
     </div>
 
     <!-- Pop-up Modal Sign Up QHUF APPAREL -->
-    <div id="signupModal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>Join QHUF APPAREL</h3>
-            <p>Silakan isi nama dan email kamu untuk melanjutkan pemesanan.</p>
-            
-            <input type="text" id="modalName" placeholder="Nama Lengkap" required>
-            <input type="email" id="modalEmail" placeholder="Alamat Email" required>
-            
-            <div class="modal-buttons">
-                <button id="btnCancel" class="btn-secondary">Batal</button>
-                <button id="btnSubmit" class="btn-primary">Lanjutkan</button>
-            </div>
+<div id="signupModal" class="modal-overlay">
+    <div class="modal-box" style="text-align: left;">
+        <h3 style="text-align: center; margin-bottom: 15px;">Data Pengiriman</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px; text-align: center;">Silakan lengkapi data di bawah ini untuk melanjutkan pesanan.</p>
+        
+        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px;">Nama Lengkap</label>
+        <input type="text" id="modalName" placeholder="Contoh: Budi Santoso" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        
+        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px;">Email Aktif</label>
+        <input type="email" id="modalEmail" placeholder="Contoh: budi@gmail.com" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        
+        <!-- INI KODE BARU UNTUK INPUT ALAMAT -->
+        <label style="font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px;">Alamat Lengkap Pengiriman</label>
+        <textarea id="modalAddress" placeholder="Nama Jalan, No. Rumah, RT/RW, Kecamatan, Kota/Kabupaten, Kode Pos" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; height: 80px; resize: none; font-family: inherit;"></textarea>
+        
+        <div class="modal-buttons" style="display: flex; gap: 10px; margin-top: 10px;">
+            <button id="btnCancel" class="btn-secondary" style="flex: 1;">Batal</button>
+            <button id="btnSubmit" class="btn-primary" style="flex: 1;">Lanjutkan</button>
         </div>
     </div>
+</div>
 </body>
 </html>
