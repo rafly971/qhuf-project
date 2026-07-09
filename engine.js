@@ -1,41 +1,36 @@
-// 1. KONFIGURASI AKSES DATABASE SUPABASE (Data Asli Kelompokmu)
-const SUPABASE_URL = "https://cjtjmhkoplxaaquuplec.supabase.co"; 
-const SUPABASE_KEY = "sb_publishable_asFmGMLi0HeVsj0jdY34SA_H-uKESEQ";    
-
-// Memori Penyimpanan Keranjang Belanja Sementara
-let keranjangBelanja = [];
-
-// Data produk bawaan (untuk sistem Buy Now langsung)
-let produkYangDibeli = {
-    nama_produk: "Kemeja Linen Premium QHUF",
-    harga: 149000
-};
+// 1. KONFIGURASI AKSES DATABASE SUPABASE
+const SUPABASE_URL = "https://cjtjmhkoplxaaquuplec.supabase.co"; // URL Asli Kelompokmu
+const SUPABASE_KEY = "sb_publishable_asFmGMLi0HeVsj0jdY34SA_H-uKESEQ";    // Key Asli Kelompokmu
 
 // 2. AMBIL ELEMEN TOMBOL & POP-UP DARI HTML
 const modal = document.getElementById('signupModal');
 const btnCancel = document.getElementById('btnCancel');
 const btnSubmit = document.getElementById('btnSubmit');
 
-// Elemen Modal Sukses Baru (Supaya tidak abu-abu kaku)
-const successModal = document.getElementById('successModal');
-const successMessage = document.getElementById('successMessage');
-const btnSuccessClose = document.getElementById('btnSuccessClose');
+// Data produk sementara (untuk simulasi pesanan)
+let produkYangDibeli = {
+    nama_produk: "Kemeja Linen Premium QHUF",
+    harga: 149000
+};
 
-// 3. LOGIKA KETIK TOMBOL "BUY NOW" DIKLIK (SISTEM LAMA YANG DIPERBARUI DENGAN ALAMAT)
+// 3. LOGIKA KETIK TOMBOL "BUY NOW" DIKLIK
 function beliProduk() {
+    // Cek memori internal HP apakah pembeli sudah pernah isi data lengkap
     const namaTersimpan = localStorage.getItem('buyer_name');
     const emailTersimpan = localStorage.getItem('buyer_email');
-    const alamatTersimpan = localStorage.getItem('buyer_address');
+    const alamatTersimpan = localStorage.getItem('buyer_address'); // Ambil alamat di memori HP
 
     if (namaTersimpan && emailTersimpan && alamatTersimpan) {
-        // Jika data lengkap, langsung kirim ke Supabase
-        kirimKeSupabaseDirect(namaTersimpan, emailTersimpan, alamatTersimpan);
+        // Jika data lengkap, langsung kirim data ke Supabase tanpa pop-up lagi
+        kirimKeSupabase(namaTersimpan, emailTersimpan, alamatTersimpan);
     } else {
-        // Jika belum lengkap, munculkan pop-up input data pengiriman
+        // Jika ada yang belum diisi, munculkan pop-up modal data pengiriman
         if (modal) {
+            // Otomatis isikan data lama yang sudah ada agar pembeli tidak repot ketik ulang
             if(namaTersimpan) document.getElementById('modalName').value = namaTersimpan;
             if(emailTersimpan) document.getElementById('modalEmail').value = emailTersimpan;
             if(alamatTersimpan) document.getElementById('modalAddress').value = alamatTersimpan;
+            
             modal.classList.add('active');
         }
     }
@@ -44,7 +39,7 @@ function beliProduk() {
 // 4. JIKA TOMBOL "BATAL" DI KOTAK POP-UP DIKLIK
 if (btnCancel) {
     btnCancel.addEventListener('click', () => {
-        modal.classList.remove('active');
+        modal.classList.remove('active'); // Tutup pop-up
     });
 }
 
@@ -53,122 +48,29 @@ if (btnSubmit) {
     btnSubmit.addEventListener('click', async () => {
         const namaInput = document.getElementById('modalName').value.trim();
         const emailInput = document.getElementById('modalEmail').value.trim();
-        const alamatInput = document.getElementById('modalAddress').value.trim(); // Ambil data alamat baru
+        const alamatInput = document.getElementById('modalAddress').value.trim(); // Ambil input alamat baru
         
+        // Validasi jangan sampai kolomnya kosong
         if (namaInput === "" || emailInput === "" || alamatInput === "") {
-            alert("Harap isi Nama, Email, dan Alamat Lengkap kamu!");
+            alert("Harap isi Nama, Email, dan Alamat Lengkap kamu terlebih dahulu!");
             return;
         }
         
-        // Simpan data di memori internal HP
+        // Simpan semua data di memori HP biar tidak capek isi lagi ke depannya
         localStorage.setItem('buyer_name', namaInput);
         localStorage.setItem('buyer_email', emailInput);
-        localStorage.setItem('buyer_address', alamatInput);
+        localStorage.setItem('buyer_address', alamatInput); // Simpan alamat baru ke memori HP
         
+        // Tutup pop-up
         modal.classList.remove('active');
         
-        // Cek apakah ini transaksi dari Keranjang atau Buy Now langsung
-        if (keranjangBelanja.length > 0) {
-            await kirimKeranjangKeSupabase(namaInput, emailInput, alamatInput);
-        } else {
-            await kirimKeSupabaseDirect(namaInput, emailInput, alamatInput);
-        }
+        // Kirim datanya ke database Supabase
+        await kirimKeSupabase(namaInput, emailInput, alamatInput);
     });
 }
 
-// Tombol Tutup di Modal Sukses kustom diklik
-if (btnSuccessClose) {
-    btnSuccessClose.addEventListener('click', () => {
-        successModal.classList.remove('active');
-    });
-}
-
-
-// ========================================================
-// FITUR TAMBAHAN: FITUR KERANJANG BELANJA (CART)
-// ========================================================
-
-// Fungsi memasukkan produk ke keranjang
-function tambahKeKeranjang(namaProduk, hargaProduk) {
-    keranjangBelanja.push({ nama: namaProduk, harga: hargaProduk });
-    perbaruiTampilanKeranjang();
-    alert(`Berhasil memasukkan ${namaProduk} ke keranjang!`);
-}
-
-// Memperbarui hitungan angka & list barang di modal keranjang
-function perbaruiTampilanKeranjang() {
-    const cartCount = document.getElementById('cartCount');
-    const container = document.getElementById('cartItemsContainer');
-    const totalText = document.getElementById('cartTotalText');
-    
-    if(cartCount) cartCount.innerText = keranjangBelanja.length;
-    if (!container) return;
-    
-    if (keranjangBelanja.length === 0) {
-        container.innerHTML = '<p style="color: #666; text-align: center;">Keranjangmu masih kosong.</p>';
-        if(totalText) totalText.innerText = "Rp 0";
-        return;
-    }
-    
-    let htmlDaftarBarang = "";
-    let totalHarga = 0;
-    
-    keranjangBelanja.forEach((item) => {
-        totalHarga += item.harga;
-        htmlDaftarBarang += `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; border-bottom: 1px dashed #eee; padding-bottom: 5px;">
-                <span>${item.nama}</span>
-                <span style="font-weight: bold;">Rp ${item.harga.toLocaleString('id-ID')}</span>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = htmlDaftarBarang;
-    if(totalText) totalText.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
-}
-
-function bukaKeranjangModal() {
-    perbaruiTampilanKeranjang();
-    const modalCart = document.getElementById('cartModal');
-    if (modalCart) modalCart.classList.add('active');
-}
-
-function tutupKeranjangModal() {
-    const modalCart = document.getElementById('cartModal');
-    if (modalCart) modalCart.classList.remove('active');
-}
-
-// Proses checkout isi keranjang
-function checkoutKeranjang() {
-    if (keranjangBelanja.length === 0) {
-        alert("Keranjangmu masih kosong, silakan pilih produk dulu!");
-        return;
-    }
-    tutupKeranjangModal();
-    
-    const namaTersimpan = localStorage.getItem('buyer_name');
-    const emailTersimpan = localStorage.getItem('buyer_email');
-    const alamatTersimpan = localStorage.getItem('buyer_address');
-    
-    if (namaTersimpan && emailTersimpan && alamatTersimpan) {
-        kirimKeranjangKeSupabase(namaTersimpan, emailTersimpan, alamatTersimpan);
-    } else {
-        if (modal) {
-            if(namaTersimpan) document.getElementById('modalName').value = namaTersimpan;
-            if(emailTersimpan) document.getElementById('modalEmail').value = emailTersimpan;
-            if(alamatTersimpan) document.getElementById('modalAddress').value = alamatTersimpan;
-            modal.classList.add('active');
-        }
-    }
-}
-
-
-// ========================================================
-// PROSES PENGIRIMAN DATA AKHIR KE SUPABASE VIA API
-// ========================================================
-
-// A. Fungsi Kirim Produk Tunggal (Dari Fitur Buy Now Langsung)
-async function kirimKeSupabaseDirect(nama, email, alamat) {
+// 6. FUNGSI UTAMA: MENGIRIM DATA PESANAN KE SUPABASE
+async function kirimKeSupabase(nama, email, alamat) {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
             method: 'POST',
@@ -181,17 +83,14 @@ async function kirimKeSupabaseDirect(nama, email, alamat) {
             body: JSON.stringify({
                 buyer_name: nama,
                 buyer_email: email,
-                buyer_address: alamat, // Menyimpan Alamat ke Supabase
+                buyer_address: alamat, // <-- BARIS BARU: Mengirim data Alamat ke Supabase
                 product_name: produkYangDibeli.nama_produk,
                 price: produkYangDibeli.harga
             })
         });
 
         if (response.ok) {
-            if (successModal && successMessage) {
-                successMessage.innerText = `Sukses! Pesanan ${produkYangDibeli.nama_produk} atas nama ${nama} berhasil didaftarkan dan segera dikirim ke alamatmu.`;
-                successModal.classList.add('active');
-            }
+            alert(`Sukses Besar! Pesanan ${produkYangDibeli.nama_produk} atas nama ${nama} telah terdaftar di database pusat Supabase dan siap dikirim.`);
         } else {
             const errData = await response.json();
             alert("Gagal mengirim pesanan: " + JSON.stringify(errData));
@@ -199,45 +98,5 @@ async function kirimKeSupabaseDirect(nama, email, alamat) {
     } catch (error) {
         console.error("Error:", error);
         alert("Terjadi kesalahan koneksi ke server.");
-    }
-}
-
-// B. Fungsi Kirim Banyak Produk Sekaligus (Dari Fitur Keranjang Belanja)
-async function kirimKeranjangKeSupabase(nama, email, alamat) {
-    const daftarSemuaProduk = keranjangBelanja.map(item => item.nama).join(", ");
-    const totalHargaGabungan = keranjangBelanja.reduce((sum, item) => sum + item.harga, 0);
-    
-    try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({
-                buyer_name: nama,
-                buyer_email: email,
-                buyer_address: alamat, // Menyimpan Alamat ke Supabase
-                product_name: daftarSemuaProduk,
-                price: totalHargaGabungan
-            })
-        });
-
-        if (response.ok) {
-            if (successModal && successMessage) {
-                successMessage.innerText = `Sukses! Paket pesanan (${daftarSemuaProduk}) atas nama ${nama} segera dikirim ke alamatmu.`;
-                successModal.classList.add('active');
-            }
-            keranjangBelanja = [];
-            perbaruiTampilanKeranjang();
-        } else {
-            const errData = await response.json();
-            alert("Gagal mengirim pesanan: " + JSON.stringify(errData));
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Terjadi kesalahan koneksi server.");
     }
 }
