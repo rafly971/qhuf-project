@@ -1,6 +1,6 @@
 // 1. KONFIGURASI AKSES DATABASE SUPABASE
-const SUPABASE_URL = "https://c.supabase.co"; // <-- GANTI dengan URL asli kelompokmu
-const SUPABASE_KEY = "sb_publishable_...";    // <-- GANTI dengan Key asli kelompokmu
+const SUPABASE_URL = "https://cjtjmhkoplxaaquuplec.supabase.co"; // <-- GANTI dengan URL asli kelompokmu
+const SUPABASE_KEY = "‎sb_publishable_asFmGMLi0HeVsj0jdY34SA_H-uKESEQ";    // <-- GANTI dengan Key asli kelompokmu
 
 // Memori Penyimpanan Keranjang Sementara
 let keranjangBelanja = [];
